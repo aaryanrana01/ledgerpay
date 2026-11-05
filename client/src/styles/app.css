@@ -1,0 +1,1227 @@
+/* ==========================================================================
+   LedgerPay
+
+   The visual reference is a columnar accounting pad: pale green paper, printed
+   rules, red ink for debits and green-black for credits. Amounts, references,
+   sequence numbers and hashes are all set in a mono face, because in a ledger
+   the figures need to line up in columns — that is the entire point of the
+   artefact this interface is imitating.
+   ========================================================================== */
+
+:root {
+  --paper: #edefe6;
+  --paper-band: #e4e8db;
+  --rule: #c6cfba;
+  --card: #fbfbf7;
+
+  --ink: #1a2420;
+  --ink-soft: #5f6b64;
+  --ink-faint: #8e9890;
+
+  --debit: #9a2e1e;
+  --credit: #14594b;
+  --brass: #a87c2a;
+
+  --display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+  --body: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  --rail: 232px;
+  --radius: 3px; /* paper is cut, not rounded */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--ink);
+  text-decoration-color: var(--brass);
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* --------------------------------------------------------------- primitives */
+
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.hairline {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 0;
+}
+
+.debit {
+  color: var(--debit);
+}
+.credit {
+  color: var(--credit);
+}
+
+/* ------------------------------------------------------------------ buttons */
+
+.btn {
+  --btn-bg: var(--ink);
+  --btn-fg: var(--paper);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn.ghost {
+  --btn-bg: transparent;
+  --btn-fg: var(--ink);
+  border-color: var(--rule);
+}
+
+.btn.ghost:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+
+.btn.brass {
+  --btn-bg: var(--brass);
+  --btn-fg: #fffdf7;
+  border-color: var(--brass);
+}
+
+.btn.small {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* ------------------------------------------------------------------- fields */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.field label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.field input {
+  padding: 11px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--card);
+  transition: border-color 0.12s ease;
+}
+
+.field input:focus {
+  border-color: var(--brass);
+  outline: none;
+}
+
+.field input.mono {
+  font-size: 16px;
+}
+
+.field .hint {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.field .error {
+  font-size: 12px;
+  color: var(--debit);
+}
+
+.form-error {
+  border-left: 3px solid var(--debit);
+  background: #f7e9e5;
+  color: var(--debit);
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* --------------------------------------------------------------- auth pages */
+
+.auth {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  min-height: 100%;
+}
+
+.auth-pitch {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 56px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.auth-pitch .mark {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.auth-pitch h1 {
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: clamp(34px, 3.6vw, 52px);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  margin: 40px 0 18px;
+  max-width: 12ch;
+}
+
+.auth-pitch p {
+  color: #b9c2bb;
+  max-width: 44ch;
+  margin: 0 0 28px;
+}
+
+/* A miniature of the ledger, so the pitch shows the product rather than
+   describing it. */
+.pitch-ledger {
+  border-top: 1px solid #34433c;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.pitch-ledger div {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid #34433c;
+  color: #b9c2bb;
+}
+
+.pitch-ledger .dr {
+  color: #e0907f;
+}
+.pitch-ledger .cr {
+  color: #7fc4b3;
+}
+
+.auth-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+}
+
+.auth-form-inner {
+  width: 100%;
+  max-width: 380px;
+}
+
+.auth-form h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  margin: 8px 0 4px;
+}
+
+.auth-form .sub {
+  color: var(--ink-soft);
+  font-size: 14px;
+  margin: 0 0 28px;
+}
+
+.auth-form .swap {
+  margin-top: 20px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.demo-hint {
+  margin-top: 24px;
+  padding: 12px 14px;
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.demo-hint code {
+  font-family: var(--mono);
+  color: var(--ink);
+}
+
+/* --------------------------------------------------------------- app shell */
+
+.shell {
+  display: grid;
+  grid-template-columns: var(--rail) 1fr;
+  min-height: 100%;
+}
+
+.rail {
+  border-right: 1px solid var(--rule);
+  padding: 26px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.rail .mark {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rail .mark::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background: var(--brass);
+}
+
+.rail nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rail nav a {
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 500;
+  border-left: 2px solid transparent;
+}
+
+.rail nav a:hover {
+  background: var(--paper-band);
+  color: var(--ink);
+}
+
+.rail nav a.active {
+  color: var(--ink);
+  border-left-color: var(--brass);
+  background: var(--paper-band);
+}
+
+.rail .whoami {
+  margin-top: auto;
+  border-top: 1px solid var(--rule);
+  padding-top: 16px;
+}
+
+.rail .whoami .tag {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--brass);
+}
+
+.rail .whoami .name {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+
+.canvas {
+  padding: 32px 40px 80px;
+  max-width: 1080px;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.page-head h1 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 27px;
+  letter-spacing: -0.025em;
+  margin: 6px 0 0;
+}
+
+/* -------------------------------------------------------------- statement */
+
+.statement {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 26px 28px;
+  margin-bottom: 26px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* The printed left margin of an accounting pad. */
+.statement::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--brass);
+  opacity: 0.7;
+}
+
+.balance-figure {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: clamp(38px, 6vw, 62px);
+  letter-spacing: -0.045em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  margin: 10px 0 6px;
+}
+
+.balance-figure .currency {
+  font-size: 0.42em;
+  font-weight: 500;
+  color: var(--ink-faint);
+  margin-right: 10px;
+  vertical-align: 0.35em;
+}
+
+.balance-figure .paise {
+  color: var(--ink-faint);
+}
+
+.statement-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+
+.statement-meta b {
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.statement-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------ chain strip */
+
+.chain {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 11px 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper-band);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin-bottom: 20px;
+}
+
+.chain .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  flex: none;
+}
+
+.chain.ok .dot {
+  background: var(--credit);
+}
+
+.chain.bad .dot {
+  background: var(--debit);
+}
+
+.chain.checking .dot {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.chain .head-hash {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 240px;
+}
+
+/* ------------------------------------------------------------------ cards */
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+}
+
+.card h3 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+}
+
+.card .card-sub {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin: 0 0 16px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 13.5px;
+}
+
+.stat-row:last-child {
+  border-bottom: 0;
+}
+
+.stat-row .value {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------- the ledger table */
+
+.ledger {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.ledger-head,
+.ledger-row-main {
+  display: grid;
+  grid-template-columns: 92px 1fr 118px 118px 132px;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 18px;
+}
+
+.ledger-head {
+  background: var(--paper-band);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.ledger-head .num,
+.ledger-row-main .num {
+  text-align: right;
+}
+
+.ledger-row {
+  border-bottom: 1px solid var(--rule);
+}
+
+.ledger-row:last-child {
+  border-bottom: 0;
+}
+
+/* Alternating bands, the way ledger paper is printed. */
+.ledger-row:nth-child(even) .ledger-row-main {
+  background: #f6f7f1;
+}
+
+.ledger-row-main {
+  width: 100%;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.ledger-row-main:hover {
+  background: var(--paper-band) !important;
+}
+
+.ledger-row-main .date {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+.ledger-row-main .who {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledger-row-main .memo {
+  font-size: 12px;
+  color: var(--ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledger-row-main .amount {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  text-align: right;
+}
+
+.ledger-row-main .running {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.tag-reversed {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--rule);
+  padding: 1px 5px;
+  color: var(--ink-faint);
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------- the double-entry panel */
+
+.entry-panel {
+  background: var(--paper-band);
+  border-top: 1px solid var(--rule);
+  padding: 18px 18px 20px 18px;
+  animation: unfold 0.18s ease;
+}
+
+@keyframes unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.entry-panel .panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.entry-legs {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+.entry-legs th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 0 10px 7px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.entry-legs td {
+  padding: 8px 10px 8px 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+.entry-legs .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.entry-legs tr.mine td {
+  background: rgba(168, 124, 42, 0.08);
+}
+
+.entry-legs tfoot td {
+  font-weight: 700;
+  border-bottom: 0;
+  padding-top: 10px;
+}
+
+.hash-link {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  word-break: break-all;
+  line-height: 1.6;
+  margin-top: 12px;
+}
+
+.hash-link b {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------- sparkline */
+
+.spark {
+  width: 100%;
+  height: 84px;
+  display: block;
+}
+
+.spark .bar-in {
+  fill: var(--credit);
+}
+
+.spark .bar-out {
+  fill: var(--debit);
+}
+
+.spark-axis {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+  margin-top: 6px;
+}
+
+/* ------------------------------------------------------------------ modal */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 36, 32, 0.45);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8vh 20px 20px;
+  z-index: 50;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+@media (max-height: 780px) {
+  .overlay {
+    padding: 24px 20px;
+  }
+}
+
+.modal {
+  background: var(--card);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 420px;
+  padding: 24px 26px 26px;
+  animation: rise 0.16s ease;
+  flex: none;
+  margin: auto 0;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.modal h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  margin: 4px 0 4px;
+}
+
+.modal .sub {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 0 0 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.resolved {
+  font-size: 12.5px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--credit);
+  background: #eaf1ee;
+  color: var(--credit);
+  margin: -8px 0 16px;
+}
+
+/* ------------------------------------------------------------------ toast */
+
+.toasts {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+  max-width: 340px;
+}
+
+.toast {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  box-shadow: 0 8px 20px rgba(26, 36, 32, 0.2);
+  animation: rise 0.16s ease;
+  border-left: 3px solid var(--brass);
+}
+
+.toast.bad {
+  border-left-color: #e0907f;
+}
+
+.toast .ref {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #b9c2bb;
+  display: block;
+  margin-top: 3px;
+}
+
+/* ------------------------------------------------------------- empty/edge */
+
+.empty {
+  padding: 44px 24px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.empty p {
+  margin: 0 0 16px;
+  font-size: 14px;
+}
+
+.loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 5px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 12.5px;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.chip.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.session-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 13px;
+}
+
+.session-row:last-child {
+  border-bottom: 0;
+}
+
+.session-row .ua {
+  color: var(--ink-soft);
+  font-size: 12px;
+  max-width: 46ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ responsive */
+
+@media (max-width: 900px) {
+  .auth {
+    grid-template-columns: 1fr;
+  }
+  .auth-pitch {
+    padding: 32px 24px;
+  }
+  .auth-pitch h1 {
+    margin-top: 24px;
+  }
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+  .rail {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    overflow-x: auto;
+  }
+  .rail nav {
+    flex-direction: row;
+  }
+  .rail nav a {
+    border-left: 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .rail nav a.active {
+    border-left: 0;
+    border-bottom-color: var(--brass);
+  }
+  .rail .whoami {
+    margin-top: 0;
+    margin-left: auto;
+    border-top: 0;
+    padding-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .rail .whoami .name {
+    display: none;
+  }
+  .canvas {
+    padding: 22px 18px 60px;
+  }
+  .ledger-head,
+  .ledger-row-main {
+    grid-template-columns: 1fr 100px;
+    row-gap: 4px;
+  }
+  .ledger-head .col-date,
+  .ledger-head .col-credit,
+  .ledger-head .col-running,
+  .ledger-row-main .running,
+  .ledger-row-main .is-empty {
+    display: none;
+  }
+  .ledger-head .col-amount {
+    grid-column: 2;
+    text-align: right;
+  }
+}
+
+/* ------------------------------------------------------- payment controls */
+
+.modal.wide {
+  max-width: 480px;
+}
+
+.quick-amounts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: -6px 0 18px;
+}
+
+.method-picker {
+  border: 0;
+  padding: 0;
+  margin: 0 0 16px;
+}
+
+.method-picker legend {
+  margin-bottom: 8px;
+}
+
+.method {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: 'radio label' 'radio hint';
+  gap: 0 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-bottom: 8px;
+  background: var(--card);
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.method:hover {
+  border-color: var(--ink-faint);
+}
+
+.method.on {
+  border-color: var(--credit);
+  background: #eaf1ee;
+}
+
+.method input {
+  grid-area: radio;
+  accent-color: var(--credit);
+  width: 16px;
+  height: 16px;
+}
+
+.method-label {
+  grid-area: label;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.method-hint {
+  grid-area: hint;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.pay-note {
+  font-size: 12px;
+  color: var(--ink-soft);
+  border-left: 2px solid var(--rule);
+  padding-left: 10px;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+.segmented {
+  display: flex;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.segmented button {
+  flex: 1;
+  padding: 9px 12px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--rule);
+}
+
+.segmented button.on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.field select {
+  padding: 11px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+/* --------------------------------------------------------- payments page */
+
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.payment-row:last-child {
+  border-bottom: 0;
+}
+
+.payment-main {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.payment-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border: 1px solid var(--rule);
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+.payment-status.credit {
+  color: var(--credit);
+  border-color: var(--credit);
+}
+
+.payment-status.debit {
+  color: var(--debit);
+  border-color: var(--debit);
+}
+
+.payment-meta {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 3px;
+}
+
+.payment-ref {
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+.empty-inline {
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin: 0;
+}

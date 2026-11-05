@@ -1,0 +1,28 @@
+# Single-node MongoDB replica set.
+#
+# Replication is not optional here: multi-document transactions — the thing that
+# makes a transfer atomic across two accounts and two ledger rows — are only
+# available on a replica set. A standalone mongod will start fine and then fail
+# every transfer.
+services:
+  mongo:
+    image: mongo:7
+    container_name: ledgerpay-mongo
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: >
+        mongosh --quiet --eval "
+          try { rs.status().ok }
+          catch (e) { rs.initiate({_id:'rs0', members:[{_id:0, host:'localhost:27017'}]}).ok }
+        "
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 5s
+
+volumes:
+  mongo-data:
